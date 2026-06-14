@@ -5,11 +5,15 @@ import react from '@vitejs/plugin-react';
 // AUTH0_IDENTIFIER, AUTH0_ALLOWED_URL) into the VITE_AUTH0_* names the client
 // reads, so a single Vercel env var works for both server and client.
 function deriveClientAuth0Env(env: Record<string, string>) {
+  // `env` only contains VITE_-prefixed vars (filtered by loadEnv).
+  // Fall back to process.env for non-prefixed Auth0 dashboard-style names
+  // so a single Vercel env var set as AUTH0_DOMAIN works for both server
+  // and client builds.
   const domainSource =
     env.VITE_AUTH0_DOMAIN ||
-    env.AUTH0_DOMAIN ||
-    env.AUTH0_DOMAIN_URL ||
-    env.AUTH0_ISSUER_BASE_URL ||
+    process.env.AUTH0_DOMAIN ||
+    process.env.AUTH0_DOMAIN_URL ||
+    process.env.AUTH0_ISSUER_BASE_URL ||
     '';
   const domain = domainSource.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
@@ -21,20 +25,20 @@ function deriveClientAuth0Env(env: Record<string, string>) {
   // fall back to AUTH0_APP_ID to avoid colliding with the management app.
   const clientId =
     env.VITE_AUTH0_CLIENT_ID ||
-    env.AUTH0_SPA_CLIENT_ID ||
-    env.AUTH0_CLIENT_ID ||
+    process.env.AUTH0_SPA_CLIENT_ID ||
+    process.env.AUTH0_CLIENT_ID ||
     '';
 
   const audience =
     env.VITE_AUTH0_AUDIENCE ||
-    env.AUTH0_AUDIENCE ||
-    env.AUTH0_IDENTIFIER ||
+    process.env.AUTH0_AUDIENCE ||
+    process.env.AUTH0_IDENTIFIER ||
     (domain ? `https://${domain}/api/v2/` : '');
 
   const redirectUri = (
     env.VITE_AUTH0_REDIRECT_URI ||
-    env.AUTH0_ALLOWED_URL ||
-    env.AUTH0_BASE_URL ||
+    process.env.AUTH0_ALLOWED_URL ||
+    process.env.AUTH0_BASE_URL ||
     ''
   ).replace(/\/$/, '');
 
@@ -46,7 +50,8 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), 'VITE_');
   const auth0 = deriveClientAuth0Env(env);
 
-  const apiBase = env.VITE_API_URL || env.AUTH0_ALLOWED_URL || env.AUTH0_BASE_URL || '';
+  // Also fall back to process.env for non-VITE_ vars (same reason as above).
+  const apiBase = (env.VITE_API_URL || process.env.AUTH0_ALLOWED_URL || process.env.AUTH0_BASE_URL || '').replace(/\/$/, '');
 
   // Fail loudly at build time if the Auth0 essentials are missing — an empty
   // domain or client id produces a bundle where login can never start.

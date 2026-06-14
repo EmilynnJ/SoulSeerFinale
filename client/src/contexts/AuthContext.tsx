@@ -5,6 +5,12 @@ import type { AuthState, User } from '../types';
 
 export interface AuthStateWithError extends AuthState {
   authError: string | null;
+  /**
+   * True when Auth0 has finished loading and the user is Auth0-authenticated,
+   * even if the internal backend user record hasn't loaded yet. Useful for
+   * showing a loading / syncing state instead of a bare "Sign In" button.
+   */
+  auth0IsAuthenticated: boolean;
 }
 
 export const AuthContext = createContext<AuthStateWithError | null>(null);
@@ -116,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: auth0IsAuth && !!user,
         isLoading: auth0Loading || isLoading,
         authError,
+        auth0IsAuthenticated: auth0IsAuth,
         login,
         logout,
         refreshUser,

@@ -3,7 +3,7 @@ import { LoadingPage, Button } from '../../components/ui';
 import { Navigate } from 'react-router-dom';
 
 export function DashboardPage() {
-  const { user, isAuthenticated, isLoading, authError, refreshUser, logout } = useAuth();
+  const { user, isAuthenticated, auth0IsAuthenticated, isLoading, authError, refreshUser, logout } = useAuth();
 
   if (isLoading) {
     return <LoadingPage message="Preparing your dashboard..." />;
@@ -12,7 +12,7 @@ export function DashboardPage() {
   // Auth0 session exists but the backend couldn't load the internal user
   // record. Show a recoverable error screen instead of redirecting back to
   // /login — that would re-trigger Auth0 and cause an infinite loop.
-  if (authError) {
+  if (auth0IsAuthenticated && (authError || !user)) {
     return (
       <div className="page-enter">
         <div className="container" style={{ maxWidth: 560, paddingTop: '4rem' }}>
@@ -22,9 +22,11 @@ export function DashboardPage() {
               You are signed in with Auth0, but the SoulSeer API returned an
               error while syncing your account.
             </p>
-            <p className="caption" style={{ marginBottom: '1.5rem' }}>
-              {authError}
-            </p>
+            {authError && (
+              <p className="caption" style={{ marginBottom: '1.5rem' }}>
+                {authError}
+              </p>
+            )}
             <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
               <Button variant="primary" onClick={() => refreshUser?.()}>
                 Retry

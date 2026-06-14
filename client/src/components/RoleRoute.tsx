@@ -11,7 +11,7 @@
 import { Navigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { LoadingPage } from './ui';
+import { Button, LoadingPage } from './ui';
 
 type Role = 'admin' | 'reader' | 'client';
 
@@ -32,10 +32,40 @@ interface RoleRouteProps {
 }
 
 export function RoleRoute({ allow, children }: RoleRouteProps) {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, auth0IsAuthenticated, isLoading, authError, refreshUser, logout } = useAuth();
 
   if (isLoading) {
     return <LoadingPage message="Loading your dashboard..." />;
+  }
+
+  // Auth0 session exists but the backend user sync failed — show a
+  // recoverable error screen instead of redirecting to /login (which
+  // would re-trigger Auth0 and cause an infinite redirect loop).
+  if (auth0IsAuthenticated && authError) {
+    return (
+      <div className="page-enter">
+        <div className="container" style={{ maxWidth: 560, paddingTop: '4rem' }}>
+          <div className="card" style={{ padding: '2rem', textAlign: 'center' }}>
+            <h1 className="heading-2">We couldn't load your profile</h1>
+            <p className="login-cosmic__text" style={{ marginBottom: '1rem' }}>
+              You are signed in with Auth0, but the SoulSeer API returned an
+              error while syncing your account.
+            </p>
+            <p className="caption" style={{ marginBottom: '1.5rem' }}>
+              {authError}
+            </p>
+            <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'center' }}>
+              <Button variant="primary" onClick={() => refreshUser?.()}>
+                Retry
+              </Button>
+              <Button variant="ghost" onClick={() => logout()}>
+                Sign out
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   // Not signed in (or the backend user record never loaded) — send to /login.

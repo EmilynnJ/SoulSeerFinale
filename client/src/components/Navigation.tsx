@@ -15,7 +15,7 @@ const NAV_ITEMS = [
 ] as const;
 
 function Navigation() {
-  const { isAuthenticated, user, login, logout } = useAuth();
+  const { isAuthenticated, auth0IsAuthenticated, isLoading, user, login, logout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
@@ -115,7 +115,21 @@ function Navigation() {
             </li>
           )}
           <li>
-            {isAuthenticated ? (
+            {isLoading && auth0IsAuthenticated ? (
+              <span className="nav__user-name" style={{ opacity: 0.7 }}>
+                Syncing…
+              </span>
+            ) : auth0IsAuthenticated && !isAuthenticated ? (
+              // Auth0 OK but backend sync failed — don't show "Sign In"
+              <div className="flex items-center gap-3">
+                <span className="nav__user-name" style={{ opacity: 0.7 }}>
+                  Sync failed
+                </span>
+                <Button variant="ghost" size="sm" onClick={() => logout()}>
+                  Sign Out
+                </Button>
+              </div>
+            ) : isAuthenticated ? (
               <div className="flex items-center gap-3">
                 {user?.fullName && (
                   <span className="nav__user-name">{user.fullName}</span>
@@ -178,7 +192,20 @@ function Navigation() {
         )}
 
         <div className="nav__mobile-auth">
-          {isAuthenticated ? (
+          {isLoading && auth0IsAuthenticated ? (
+            <p className="nav__mobile-user-name" style={{ opacity: 0.7 }}>
+              Syncing your account…
+            </p>
+          ) : auth0IsAuthenticated && !isAuthenticated ? (
+            <>
+              <p className="nav__mobile-user-name" style={{ opacity: 0.7 }}>
+                Sync failed — please try again later
+              </p>
+              <Button variant="ghost" fullWidth onClick={() => logout()}>
+                Sign Out
+              </Button>
+            </>
+          ) : isAuthenticated ? (
             <>
               {user?.fullName && (
                 <p className="nav__mobile-user-name">
