@@ -27,6 +27,7 @@
     "@neondatabase/serverless": "^0.10.4",
     "agora-token": "^2.0.5",
     "cloudinary": "^2.5.1",
+    "codacy": "^1.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.6.1",
     "drizzle-orm": "^0.45.2",
